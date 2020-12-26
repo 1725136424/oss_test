@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>上传文件</title>
+</head>
+<body>
+<input name="file" type="file" id="file">
+<button id="btn">点击</button>
+<script th:src="@{/jquery-3.5.1.min.js}"></script>
+<script th:src="@{/axios.js}"></script>
+<script th:inline="javascript" type="text/javascript">
+    $("#btn").click(function () {
+        // 创建一个对象表单formData
+        let formData = new FormData();
+        // 获取上传文件
+        let file = $("#file").get(0).files[0];
+        // 文件名称
+        let fileName = file.name
+        // 文件存放路径
+        let filePath = [[${model.dir}]] + uuid() + "_" + fileName
+        // 上传路径
+        let host = [[${model.host}]]
+        // 外网访问路径
+        let accessUrl = host + "/" + filePath
+        // 加入数据至formData
+        formData.append("key", filePath)
+        formData.append("policy", [[${model.policy}]])
+        formData.append("OSSAccessKeyId", [[${model.accessid}]])
+        // 上传成功返回的状态码
+        formData.append("success_action_status", "201")
+        formData.append("callback", [[${model.callback}]])
+        formData.append("signature", [[${model.signature}]])
+        // 重定向地址
+        // formData.append("success_action_redirect", "http://127.0.0.1:8083/success?accessUrl=" + accessUrl)
+        formData.append("file", file)
+        // 上传文件
+        axios.post(host, formData)
+        .then((res) => {
+            if (res != null) {
+                // 外网文件访问路径
+                console.log(accessUrl);
+            }
+        })
+        .catch(e => {
+            console.log(e);
+        })
+    })
+
+    // uuid生成函数
+    function uuid() {
+        let s = [];
+        let hexDigits = "0123456789abcdef";
+        for (let i = 0; i < 36; i++) {
+            s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+        }
+        s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+        s[8] = s[13] = s[18] = s[23] = "-";
+        return s.join("");
+    }
+</script>
+</body>
+</html>
